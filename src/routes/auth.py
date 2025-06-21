@@ -10,18 +10,14 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"message": "Dados ausentes"}), 400
-
+        data = request.json
         email = data.get("email")
         password = data.get("password")
 
         if not email or not password:
-            return jsonify({"message": "E-mail e senha são obrigatórios"}), 400
+            return jsonify({"message": "Email e senha obrigatórios"}), 400
 
         user = User.query.filter_by(email=email).first()
-
         if not user or not user.check_password(password):
             return jsonify({"message": "Credenciais inválidas"}), 401
 
@@ -30,21 +26,3 @@ def login():
             "email": user.email,
             "is_admin": user.is_admin,
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-        }
-
-        token = jwt.encode(
-            payload,
-            os.getenv("SECRET_KEY", "asdf#FGSgvasgf$5$WGT"),
-            algorithm="HS256"
-        )
-
-        return jsonify({
-            "token": token,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "is_admin": user.is_admin
-            }
-        })
-    except Exception as e:
-        return jsonify({"message": "Erro interno", "error": str(e)}), 500
