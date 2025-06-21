@@ -2,11 +2,11 @@ import os
 import sys
 from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
-from src.models.user import db, User
-from src.routes.auth import auth_bp
-from src.routes.user import user_bp
-from src.routes.categories import categories_bp
-from src.routes.stickers import stickers_bp
+from models.user import db, User
+from routes.auth import auth_bp
+from routes.user import user_bp
+from routes.categories import categories_bp
+from routes.stickers import stickers_bp
 
 # Garante que o projeto funcione em qualquer estrutura
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
