@@ -9,28 +9,37 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.json
-    email = data.get("email")
-    password = data.get("password")
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Dados JSON ausentes"}), 400
 
-    user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        return jsonify({"message": "Credenciais inválidas"}), 401
+        email = data.get("email")
+        password = data.get("password")
 
-    payload = {
-        "user_id": user.id,
-        "email": user.email,
-        "is_admin": user.is_admin,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-    }
+        if not email or not password:
+            return jsonify({"error": "Email e senha são obrigatórios"}), 400
 
-    token = jwt.encode(payload, os.getenv("SECRET_KEY", "asdf#FGSgvasgf$5$WGT"), algorithm="HS256")
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.check_password(password):
+            return jsonify({"error": "Credenciais inválidas"}), 401
 
-    return jsonify({
-        "token": token,
-        "user": {
-            "id": user.id,
+        payload = {
+            "user_id": user.id,
             "email": user.email,
-            "is_admin": user.is_admin
+            "is_admin": user.is_admin,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }
-    })
+
+        token = jwt.encode(
+            payload,
+            os.getenv("SECRET_KEY", "asdf#FGSgvasgf$5$WGT"),
+            algorithm="HS256"
+        )
+
+        return jsonify({
+            "token": token,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+               
