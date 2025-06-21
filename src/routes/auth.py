@@ -26,3 +26,17 @@ def login():
             "email": user.email,
             "is_admin": user.is_admin,
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        }
+
+        token = jwt.encode(payload, os.getenv("SECRET_KEY", "asdf#FGSgvasgf$5$WGT"), algorithm="HS256")
+
+        return jsonify({
+            "token": token,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "is_admin": user.is_admin
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
