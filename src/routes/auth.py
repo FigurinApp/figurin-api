@@ -1,42 +1,36 @@
-from flask import Blueprint, request, jsonify, session
-from src.models.user import db, User
+from flask import Blueprint, request, jsonify
+from werkzeug.security import check_password_hash
+from models.user import User, db
+import jwt
+import datetime
+import os
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    if not username or not password:
-        return jsonify({'error': 'Username and password are required'}), 400
-    
-    user = User.query.filter_by(username=username).first()
-    
-    if user and user.check_password(password):
-        session['user_id'] = user.id
-        session['is_admin'] = user.is_admin
-        return jsonify({
-            'message': 'Login successful',
-            'user': user.to_dict()
-        }), 200
-    else:
-        return jsonify({'error': 'Invalid username or password'}), 401
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
 
-@auth_bp.route('/logout', methods=['POST'])
-def logout():
-    session.clear()
-    return jsonify({'message': 'Logout successful'}), 200
+    user = User.query.filter_by(email=email).first()
+    if not user or not user.check_password(password):
+        return jsonify({"message": "Credenciais inválidas"}), 401
 
-@auth_bp.route('/me', methods=['GET'])
-def get_current_user():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    user = User.query.get(session['user_id'])
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
-    return jsonify({'user': user.to_dict()}), 200
+    payload = {
+        "user_id": user.id,
+        "email": user.email,
+        "is_admin": user.is_admin,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+    }
 
+    token = jwt.encode(payload, os.getenv("SECRET_KEY", "asdf#FGSgvasgf$5$WGT"), algorithm="HS256")
+
+    return jsonify({
+        "token": token,
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "is_admin": user.is_admin
+        }
+    })
