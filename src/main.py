@@ -1,5 +1,4 @@
 import os
-import sys
 from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from models.user import db, User
@@ -8,15 +7,13 @@ from routes.user import user_bp
 from routes.categories import categories_bp
 from routes.stickers import stickers_bp
 
-# Garante que o projeto funcione em qualquer estrutura
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-CORS(app, supports_credentials=True)
+# CORS liberado para frontend hospedado via HTTPS (Render)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 db.init_app(app)
 
@@ -27,11 +24,13 @@ with app.app_context():
 def ping():
     return jsonify({"message": "pong"})
 
+# Blueprints
 app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(categories_bp, url_prefix='/api')
 app.register_blueprint(stickers_bp, url_prefix='/api')
 
+# Serve SPA
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
