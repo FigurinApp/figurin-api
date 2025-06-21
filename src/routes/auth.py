@@ -12,17 +12,18 @@ def login():
     try:
         data = request.get_json()
         if not data:
-            return jsonify({"error": "Dados JSON ausentes"}), 400
+            return jsonify({"message": "Dados ausentes"}), 400
 
         email = data.get("email")
         password = data.get("password")
 
         if not email or not password:
-            return jsonify({"error": "Email e senha são obrigatórios"}), 400
+            return jsonify({"message": "E-mail e senha são obrigatórios"}), 400
 
         user = User.query.filter_by(email=email).first()
+
         if not user or not user.check_password(password):
-            return jsonify({"error": "Credenciais inválidas"}), 401
+            return jsonify({"message": "Credenciais inválidas"}), 401
 
         payload = {
             "user_id": user.id,
@@ -42,4 +43,8 @@ def login():
             "user": {
                 "id": user.id,
                 "email": user.email,
-               
+                "is_admin": user.is_admin
+            }
+        })
+    except Exception as e:
+        return jsonify({"message": "Erro interno", "error": str(e)}), 500
