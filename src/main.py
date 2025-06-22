@@ -27,6 +27,7 @@ with app.app_context():
 def ping():
     return jsonify({"message": "pong"})
 
+# Registro das rotas
 app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(categories_bp, url_prefix='/api')
