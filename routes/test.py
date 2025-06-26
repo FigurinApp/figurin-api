@@ -4,11 +4,10 @@ from models.user import User
 
 test_bp = Blueprint('test', __name__)
 
-@test_bp.route('/create-admin', methods=['GET'])
+@test_bp.route('/api/create-admin', methods=['GET'])
 def create_admin():
     db = SessionLocal()
     if db.query(User).filter_by(email="admin@figurinapp.com").first():
-        db.close()
         return jsonify({"msg": "Admin já existe"}), 400
 
     admin = User(email="admin@figurinapp.com", is_admin=True)
