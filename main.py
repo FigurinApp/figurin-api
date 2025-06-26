@@ -1,36 +1,29 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
-from database.app import db
-from routes.auth import auth_bp
-from routes.user import user_bp
+
+# Blueprints das rotas
+from routes.auth       import auth_bp
+from routes.user       import user_bp
 from routes.categories import categories_bp
-from routes.stickers import stickers_bp
-import os
+from routes.stickers   import stickers_bp
+from routes.test       import test_bp
 
-app = Flask(__name__)
-CORS(app, origins=["https://figurin-app.onrender.com", "http://localhost:5173"])
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret')
+def create_app():
+    app = Flask(__name__)
 
-db.init_app(app)
-jwt = JWTManager(app)
+    # Permite chamadas do frontend a qualquer rota /api/*
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Registra blueprints
-app.register_blueprint(auth_bp, url_prefix='/api')
-app.register_blueprint(user_bp, url_prefix='/api')
-app.register_blueprint(categories_bp, url_prefix='/api')
-app.register_blueprint(stickers_bp, url_prefix='/api')
+    # Registro de blueprints com prefixo /api
+    app.register_blueprint(auth_bp,       url_prefix='/api')
+    app.register_blueprint(user_bp,       url_prefix='/api')
+    app.register_blueprint(categories_bp, url_prefix='/api')
+    app.register_blueprint(stickers_bp,   url_prefix='/api')
+    app.register_blueprint(test_bp,       url_prefix='/api')
 
-# Cria o banco na primeira execução
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
-@app.route('/')
-def index():
-    return 'API FigurinApp funcionando!'
+    return app
 
 if __name__ == '__main__':
+    app = create_app()
+    # roda em 0.0.0.0 para aceitar conexões externas (p.ex. no Render)
     app.run(host='0.0.0.0', port=5000)
