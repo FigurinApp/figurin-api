@@ -1,24 +1,30 @@
 from flask import Flask
 from flask_cors import CORS
-from database.app import db
+from database.app import db, Base, engine
 from routes.auth import auth_bp
-from routes.categories import categories_bp
-from routes.user import user_bp
-from routes.stickers import stickers_bp
+from routes.test import test_bp  # Rota de teste opcional
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+# Configurações
+app.config['SECRET_KEY'] = 'secreto'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'secreta'
 
+# Inicializa o banco de dados
 db.init_app(app)
-CORS(app, resources={r"/api/*": {"origins": "*"}})  # Libera CORS
 
-# Registro das rotas
+# Garante que as tabelas estão criadas
+with app.app_context():
+    Base.metadata.create_all(bind=engine)
+
+# Libera CORS apenas para o frontend hospedado
+CORS(app, origins=["https://figurin-app.onrender.com"], supports_credentials=True)
+
+# Registra as rotas (blueprints)
 app.register_blueprint(auth_bp, url_prefix='/api')
-app.register_blueprint(user_bp, url_prefix='/api')
-app.register_blueprint(categories_bp, url_prefix='/api')
-app.register_blueprint(stickers_bp, url_prefix='/api')
+app.register_blueprint(test_bp, url_prefix='/api')  # rota /api/test
 
+# Inicia o app
 if __name__ == '__main__':
     app.run(debug=True)
